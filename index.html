@@ -3,62 +3,79 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Roberto · Verificación</title>
+<title>Roberto · Seguridad</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root { --c: #4fd1ff; --bg: #05080d; }
   * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 50% 30%, #0b1a2a, var(--bg) 70%);
-         color: #dff6ff; font-family: -apple-system, system-ui, sans-serif; display: flex;
-         flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
-  .ring { width: 120px; height: 120px; border-radius: 50%; border: 2px solid var(--c);
-          box-shadow: 0 0 25px var(--c), inset 0 0 25px rgba(79,209,255,.4); display: flex;
-          align-items: center; justify-content: center; font-size: 48px; margin-bottom: 20px;
-          animation: pulse 2s infinite; }
-  @keyframes pulse { 50% { box-shadow: 0 0 45px var(--c), inset 0 0 35px rgba(79,209,255,.6); } }
-  h1 { font-size: 18px; letter-spacing: 3px; color: var(--c); margin: 0 0 6px; }
-  p { opacity: .85; margin: 6px 0 14px; max-width: 320px; }
-  .hint { font-size: 12px; opacity: .65; margin: 0 0 14px; max-width: 300px; }
-  input { width: 200px; font-size: 28px; letter-spacing: 10px; text-align: center; padding: 10px;
-          background: transparent; color: #fff; border: 1px solid var(--c); border-radius: 10px; outline: none; }
-  button { margin-top: 16px; padding: 12px 26px; font-size: 16px; border-radius: 10px; border: 1px solid var(--c);
-           background: rgba(79,209,255,.12); color: #fff; cursor: pointer; }
-  .link { background: none; border: none; color: var(--c); opacity: .75; text-decoration: underline; font-size: 13px; }
-  .hidden { display: none; }
-  .err { color: #ff7b7b; min-height: 20px; margin-top: 12px; max-width: 300px; font-size: 14px; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: #dff6ff;
+               font-family: -apple-system, system-ui, Roboto, sans-serif; }
+  .wrap { padding: 24px 20px 32px; display: flex; flex-direction: column;
+          align-items: center; text-align: center; }
+  .ring { width: 88px; height: 88px; border-radius: 50%; border: 2px solid var(--c);
+          box-shadow: 0 0 18px rgba(79,209,255,.35); display: flex;
+          align-items: center; justify-content: center; font-size: 38px; margin-bottom: 14px; }
+  h1 { font-size: 16px; letter-spacing: 2.5px; color: var(--c); margin: 0 0 6px; }
+  p { opacity: .9; margin: 4px 0 10px; max-width: 300px; font-size: 15px; }
+  .hint { font-size: 12px; opacity: .68; margin: 0 0 16px; max-width: 300px; }
+  input { width: 190px; font-size: 26px; letter-spacing: 8px; text-align: center; padding: 10px;
+          background: #0b1624; color: #fff; border: 1px solid var(--c); border-radius: 10px; outline: none; }
+  .btn-main { width: 100%; max-width: 280px; margin-top: 10px; padding: 14px 20px; font-size: 16px;
+              font-weight: 600; border-radius: 12px; border: 1px solid var(--c);
+              background: rgba(79,209,255,.18); color: #fff; cursor: pointer; }
+  .btn-sub { background: none; border: none; color: var(--c); opacity: .85;
+             text-decoration: underline; font-size: 14px; margin-top: 14px; padding: 8px; cursor: pointer; }
+  .btn-close { background: none; border: none; color: #9fb3c8; font-size: 13px;
+               margin-top: 8px; padding: 6px 12px; cursor: pointer; }
+  .hidden { display: none !important; }
+  .err { color: #ff7b7b; min-height: 18px; margin-top: 10px; max-width: 300px; font-size: 13px; }
 </style>
 </head>
 <body>
-  <div class="ring" id="icon">🔐</div>
-  <h1>ROBERTO · SECURITY</h1>
-  <p id="desc">Verificación de identidad</p>
-  <div class="hint" id="hint">Prioridad: Huella → Face ID → PIN</div>
-  <div id="pinBox" class="hidden">
-    <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off">
-    <br><button id="pinBtn">Confirmar PIN</button>
+  <div class="wrap">
+    <div class="ring" id="icon">🔐</div>
+    <h1>ROBERTO · SECURITY</h1>
+    <p id="desc">Verificación de identidad</p>
+    <div class="hint" id="hint">Prioridad: Huella → Face ID → PIN</div>
+
+    <button id="bioBtn" class="btn-main hidden">👆 Tocar para escanear huella</button>
+
+    <div id="pinBox" class="hidden">
+      <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="••••">
+      <br><button id="pinBtn" class="btn-main">Confirmar PIN</button>
+    </div>
+
+    <button id="usePin" class="btn-sub hidden">Usar PIN en su lugar</button>
+    <div class="err" id="err"></div>
+    <button id="closeBtn" class="btn-close">✕ Cerrar</button>
   </div>
-  <button id="bioBtn" class="hidden">Verificar con huella</button>
-  <button id="usePin" class="link hidden">Usar PIN (último recurso)</button>
-  <div class="err" id="err"></div>
 
 <script>
 (() => {
-  const tg = window.Telegram.WebApp;
-  tg.ready(); tg.expand();
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (tg) {
+    try { tg.ready(); } catch (_) {}
+  }
   const q = new URLSearchParams(location.search);
-  const mode = q.get("mode") || "verify";      // verify | enroll
+  const mode = q.get("mode") || "verify";      // verify | enroll | admin_finger | admin_face
   const nonce = q.get("n") || "";
   const desc = q.get("d");
-  const bm = tg.BiometricManager;
+  const bm = tg && tg.BiometricManager;
+  const platform = (tg && tg.platform) || "";
+  const isDesktop = ["tdesktop", "macos", "web", "weba", "webk"].includes(platform);
   const $ = id => document.getElementById(id);
   const show = (id, on = true) => $(id).classList.toggle("hidden", !on);
   const err = m => { $("err").textContent = m || ""; };
   if (desc) $("desc").textContent = desc;
 
-  const send = obj => tg.sendData(JSON.stringify({ ...obj, n: nonce }));
-  // Orden de prioridad hardware: 1º huella dactilar ("finger"), 2º Face ID ("face"), 3º PIN
+  $("closeBtn").onclick = () => { if (tg && tg.close) tg.close(); };
+
+  const send = obj => {
+    if (tg && tg.sendData) tg.sendData(JSON.stringify({ ...obj, n: nonce }));
+  };
+
   const bioLabel = () => {
-    if (!bm) return "huella";
+    if (!bm) return "huella / Face ID";
     if (bm.biometricType === "finger") return "huella dactilar";
     if (bm.biometricType === "face") return "Face ID";
     return "huella / Face ID";
@@ -66,12 +83,13 @@
   const bioIcon = () => (bm && bm.biometricType === "face") ? "🙂" : "👆";
 
   function showPin(reasonNote) {
-    show("bioBtn", false); show("usePin", false); show("pinBox");
-    if (reasonNote) $("hint").textContent = reasonNote;
-    else $("hint").textContent = "PIN de respaldo (último recurso)";
+    show("bioBtn", false);
+    show("usePin", false);
+    show("pinBox", true);
+    $("hint").textContent = reasonNote || "Introduce tu PIN de seguridad";
     $("icon").textContent = "🔢";
-    setTimeout(() => $("pin").focus(), 200);
   }
+
   function submitPin() {
     const pin = $("pin").value.trim();
     if (!/^\d{4,8}$/.test(pin)) return err("El PIN tiene entre 4 y 8 dígitos");
@@ -82,77 +100,121 @@
   $("pin").addEventListener("keydown", e => { if (e.key === "Enter") submitPin(); });
 
   function randomToken() {
-    const a = new Uint8Array(32); crypto.getRandomValues(a);
+    const a = new Uint8Array(32);
+    crypto.getRandomValues(a);
     return Array.from(a, b => b.toString(16).padStart(2, "0")).join("");
   }
 
+  let busy = false;
+
   function authenticate() {
+    if (busy) return;
     err();
     const bioKind = bm.biometricType === "face" ? "face" : "finger";
     if (mode === "admin_finger" && bm.biometricType !== "finger") {
-      return err("Este paso Admin exige lector de HUELLA dactilar. Abre este botón en tu dispositivo con huella.");
+      return err("Este paso Admin exige lector de HUELLA dactilar.");
     }
     if (mode === "admin_face" && bm.biometricType !== "face") {
-      return err("Este paso Admin exige FACE ID. Abre este botón en tu dispositivo con Face ID.");
+      return err("Este paso Admin exige FACE ID.");
     }
+    busy = true;
+    $("bioBtn").textContent = "Escaneando " + bioLabel() + "...";
+    const guard = setTimeout(() => {
+      busy = false;
+      $("bioBtn").textContent = bioIcon() + " Reintentar con " + bioLabel();
+      err("El lector tardó demasiado. Pulsa reintentar o usa tu PIN.");
+      if (mode === "verify") show("usePin", true);
+    }, 8000);
+
     bm.authenticate({ reason: desc || "Verificar identidad para Roberto" }, (ok, token) => {
+      clearTimeout(guard);
+      busy = false;
+      $("bioBtn").textContent = bioIcon() + " Tocar para verificar con " + bioLabel();
       if (ok && token) {
         const t = (mode === "admin_finger" || mode === "admin_face") ? "admin_bio" : "verify";
         send({ t, tok: token, bio: bioKind });
       } else {
-        err("No se pudo verificar con " + bioLabel() + ".");
-        if (mode === "verify") show("usePin");
+        err("No se completó la lectura. Puedes reintentar o usar tu PIN.");
+        if (mode === "verify") show("usePin", true);
       }
     });
   }
 
   function enroll() {
+    if (busy) return;
     err();
+    busy = true;
     const bioKind = bm.biometricType === "face" ? "face" : "finger";
-    $("desc").textContent = "Activar " + bioLabel();
-    $("bioBtn").textContent = "Activar " + bioLabel();
-    show("bioBtn");
-    $("bioBtn").onclick = enroll;
     bm.requestAccess({ reason: "Roberto usará tu " + bioLabel() + " antes que el PIN" }, granted => {
-      if (!granted) { err("Permiso denegado. Puedes activarlo en ajustes."); bm.openSettings(); return; }
+      if (!granted) {
+        busy = false;
+        err("Permiso denegado en Telegram. Actívalo en ajustes.");
+        if (bm.openSettings) bm.openSettings();
+        return;
+      }
       const token = randomToken();
       bm.updateBiometricToken(token, updated => {
-        if (!updated) return err("No se pudo guardar el secreto en el dispositivo.");
+        if (!updated) {
+          busy = false;
+          return err("No se pudo guardar el secreto en el dispositivo.");
+        }
         bm.authenticate({ reason: "Confirma tu " + bioLabel() }, (ok, t) => {
+          busy = false;
           if (ok) send({ t: "enroll", tok: t || token, bio: bioKind });
-          else err("Verificación cancelada. Pulsa el botón para reintentar.");
+          else err("Cancelado. Pulsa el botón cuando quieras registrar tu " + bioLabel() + ".");
         });
       });
     });
   }
 
-  if (!bm) {
-    if (mode === "verify") showPin("Dispositivo sin biometría disponible: usando PIN como respaldo");
-    else err("Actualiza Telegram en el móvil para usar huella o Face ID.");
+  if (!bm || isDesktop) {
+    if (mode === "verify") {
+      showPin("En ordenador usa tu PIN directamente");
+    } else {
+      err("Abre este botón en Telegram de tu móvil para registrar Huella o Face ID.");
+    }
     return;
   }
 
+  let inited = false;
+  const initTimer = setTimeout(() => {
+    if (inited) return;
+    inited = true;
+    if (mode === "verify") showPin("Sensor ocupado · Introduce tu PIN");
+    else err("No respondió el sensor biométrico de Telegram. Cierra y prueba de nuevo.");
+  }, 1500);
+
   bm.init(() => {
+    if (inited) return;
+    inited = true;
+    clearTimeout(initTimer);
     const bioReady = bm.isBiometricAvailable && bm.isAccessGranted && bm.isBiometricTokenSaved;
+
     if (mode === "enroll") {
-      if (!bm.isBiometricAvailable) { send({ t: "enroll_unavailable" }); return; }
+      if (!bm.isBiometricAvailable) {
+        err("Tu móvil no expone biometría a Telegram.");
+        return;
+      }
       $("icon").textContent = bioIcon();
-      enroll();
+      $("desc").textContent = "Registrar " + bioLabel();
+      $("bioBtn").textContent = bioIcon() + " Tocar para activar " + bioLabel();
+      show("bioBtn", true);
+      $("bioBtn").onclick = enroll;
       return;
     }
+
+    // IMPORTANTE en Android: NO lanzar bm.authenticate() automáticamente durante la animación de apertura,
+    // porque bloquea la capa táctil de Telegram. Se lanza al pulsar el botón con la vista ya estable.
     if (bioReady) {
       $("icon").textContent = bioIcon();
-      $("bioBtn").textContent = "Verificar con " + bioLabel();
-      show("bioBtn");
-      if (mode === "verify") show("usePin");
+      $("bioBtn").textContent = bioIcon() + " Tocar para verificar con " + bioLabel();
+      show("bioBtn", true);
+      if (mode === "verify") show("usePin", true);
       $("bioBtn").onclick = authenticate;
-      authenticate();
     } else if (mode === "admin_finger" || mode === "admin_face") {
-      err("Debes tener activada la biometría (/biometria) en este dispositivo para el Modo Admin.");
-    } else if (bm.isBiometricAvailable) {
-      showPin("Activa tu " + bioLabel() + " con /biometria · Usando PIN por ahora");
+      err("Primero registra tu biometría con /biometria en este móvil.");
     } else {
-      showPin("Sin lector biométrico en este dispositivo · Usando PIN");
+      showPin("Introduce tu PIN (o registra tu huella con /biometria)");
     }
   });
 })();
